@@ -13,10 +13,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -39,6 +42,9 @@ class AccountControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+//    @Autowired
+//    private TestRestTemplate testRestTemplate;
 
     @Test
     void successCreateAccount() throws Exception {
@@ -90,6 +96,32 @@ class AccountControllerTest {
                 .andExpect(jsonPath("$.accountNumber").value("1234567890"))
                 .andDo(print());
 
+    }
+
+    @Test
+    void successGetAccountsByUserId() throws Exception {
+        //given
+        List<AccountDto> accountDtos =
+                Arrays.asList(
+                        AccountDto.builder()
+                                .accountNumber("1234567890")
+                                .balance(1000L).build(),
+                        AccountDto.builder()
+                                .accountNumber("1111111111")
+                                .balance(2000L).build(),
+                        AccountDto.builder()
+                                .accountNumber("2222222222")
+                                .balance(3000L).build()
+                );
+
+        given(accountService.getAccountsByUserId(anyLong()))
+                .willReturn(accountDtos);
+        //when
+        //then
+        mockMvc.perform(get("/account?user_id=1"))
+                .andDo(print())
+                .andExpect(jsonPath("$[0].accountNumber").value("1234567890"))
+                .andExpect(jsonPath("$[0].balance").value(1000));
     }
 
     @Test
